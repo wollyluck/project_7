@@ -89,6 +89,82 @@ contract('Flight Surety Tests', async (accounts) => {
     assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
 
   });
+
+
+  it('(airline) Register first 4 airlines without consensus', async () => {
+    
+    // ARRANGE
+    let airline = accounts[2];
+    let airline3 = accounts[3];
+    let airline4 = accounts[4];
+    
+    
+    // ACT
+    try {
+        await config.flightSuretyApp.registerAirline(airline3, config.firstAirline);
+        await config.flightSuretyApp.registerAirline(airline4, config.firstAirline);
+
+    }
+    catch(e) {
+
+    }
+    let result1 = await config.flightSuretyData.isRegistered.call(airline3); 
+    let result2 = await config.flightSuretyData.isRegistered.call(airline4); 
+    // ASSERT
+    assert.equal(result1, true, "Airline 3 cannot be registered.");
+    assert.equal(result2, true, "Airline 4 cannot be registered.");
+
+    
+  });
+
+  it('(airline) Register 5th airline. Multi-party consensus test - Registration success', async () => {
+    
+    // ARRANGE
+    let airline1 = config.firstAirline;
+    let airline2 = accounts[2];
+    let airline3 = accounts[3];
+    let airline4 = accounts[4];
+    let airline5 = accounts[6];
+    // ACT
+    let reverted = false;
+    try {
+        await config.flightSuretyApp.registerAirline(airline5, airline3);
+        await config.flightSuretyApp.registerAirline(airline5, airline4);
+    }
+    catch(e) {
+
+      reverted = true;
+    }
+    let result = await config.flightSuretyData.isRegistered.call(airline5); 
+   
+
+    // ASSERT
+    assert.equal(result, true, "Error adding 5th Airline with consensus");
+
+  });
+ 
+  it('(airline) Register 5th airline. Multi-party consensus test - Registration fail', async () => {
+    
+    // ARRANGE
+    let airline1 = config.firstAirline;
+    let airline2 = accounts[2];
+    let airline3 = accounts[3];
+    let airline4 = accounts[4];
+    let airline5 = accounts[5];
+
+    // ACT
+    try {
+        await config.flightSuretyApp.registerAirline(airline5, airline1);
+    }
+    catch(e) {
+        console.log(e);
+    }
+    let result = await config.flightSuretyData.isRegistered.call(airline5); 
+
+    // ASSERT
+    assert.equal(result, false, "5th Airline cannot be added without consensus");
+
+  });   
  
 
 });

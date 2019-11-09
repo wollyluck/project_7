@@ -14,7 +14,7 @@ const STATUS_CODE_LATE_OTHER = 50;
 const ORACLES_COUNT = 30; 
 const STATUSCODES  = [STATUS_CODE_UNKNOWN, STATUS_CODE_ON_TIME, STATUS_CODE_LATE_AIRLINE, STATUS_CODE_LATE_WEATHER, STATUS_CODE_LATE_TECHNICAL, STATUS_CODE_LATE_OTHER];
 
-let oracle = {};
+let oracles = {};
 let config = Config['localhost'];
 let web3 = new Web3(new Web3.providers.WebsocketProvider(config.url.replace('http', 'ws')));
 web3.eth.defaultAccount = web3.eth.accounts[0];
@@ -32,7 +32,9 @@ web3.eth.getAccounts().then((accounts) => {
     .catch(error => {
       console.log("Error in authorizing appcontract. " + error);
     });
-     flightSuretyApp.methods.REGISTRATION_FEE().call().then(fee => {
+     
+    
+    flightSuretyApp.methods.REGISTRATION_FEE().call().then(fee => {
       for(let a=1; a<ORACLES_COUNT; a++) {
         flightSuretyApp.methods.registerOracle()
         .send({ from: accounts[a], value: fee,gas:4000000 })
@@ -53,11 +55,48 @@ web3.eth.getAccounts().then((accounts) => {
 });
 
 
+flightSuretyApp.events.FlightStatusInfo({
+  fromBlock: 0
+}, function (error, event) {
+  if (error) console.log(error)
+  else{
+    
+    console.log("Received flightstatusInfo event:  " + JSON.stringify(event));
+    }
+    
+
+  }
+); 
+
+
 flightSuretyApp.events.OracleRequest({
     fromBlock: 0
   }, function (error, event) {
     if (error) console.log(error)
-    console.log(event)
+    else{
+      const index = event.returnValues.index;
+      const airline = event.returnValues.airline;
+      const flight = event.returnValues.flight;
+      const timestamp = event.returnValues.timestamp; 
+      for(var key in oracles)
+      {
+        var indexes = oracles[key];
+        if(indexes.includes(index))
+        {          
+          let randomstatusCode = STATUS_CODE_LATE_AIRLINE;//STATUSCODES[Math.floor(Math.random()*STATUSCODES.length)];
+          flightSuretyApp.methods.submitOracleResponse(index, airline, flight, timestamp, randomstatusCode)       
+          .send({ from: key,gas:1000000})
+          .then(result =>{
+            console.log("Oracle response sent with statuscode: "  + randomstatusCode + " for "+ flight + " and index:"+ index);
+          })
+          .catch(error =>{
+            console.log("Error while sending Oracle response  for "+ flight + " Error:" + error)
+          });      
+           
+        }
+      } 
+      } 
+   
 });
 
 const app = express();

@@ -161,13 +161,13 @@ contract FlightSuretyData {
     *
     */   
     function registerAirline(address _airline, address _caller) external requireIsOperational
-                                                                                requireRegisteredAirline(_caller)
-                                                                                requireFundedAirline(_caller)
-                                                                                returns (bool status)
+                                                                            requireRegisteredAirline(_caller)
+                                                                            returns (bool success)
     {
         RegisteredAirlines[_airline] = Airline({airlineAddress: _airline, isRegistered: true, isFunded: false});
         airlines.push(_airline);
-        return RegisteredAirlines[_airline].isRegistered;
+        success = true;
+        return (success);
     }
     
     

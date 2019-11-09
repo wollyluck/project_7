@@ -13,6 +13,10 @@ To install, download or clone the repo, then:
 
 ## Develop Client
 
+Start ganache-cli
+
+`ganache-cli -l 999999999999 -m "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" -e 10000 -a 30`
+
 To run truffle tests:
 
 `truffle test ./test/flightSurety.js`
@@ -30,7 +34,7 @@ To view dapp:
 ## Develop Server
 
 `npm run server`
-`truffle test ./test/oracles.js`
+
 
 ## Deploy
 
